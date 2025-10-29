@@ -5,6 +5,8 @@ import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,7 +15,7 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "Auction_item")
+@Table(name = "auction_item")
 public class AuctionItem {
     // define the properties
     @Id
@@ -23,6 +25,7 @@ public class AuctionItem {
     @Column(nullable = false)
     private String name;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false)
@@ -36,6 +39,7 @@ public class AuctionItem {
     @Column(nullable = false)
     private Instant endTime;
     
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AuctionStatus status = AuctionStatus.PENDING;
 
