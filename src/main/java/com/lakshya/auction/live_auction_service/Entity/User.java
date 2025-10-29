@@ -17,7 +17,7 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "User")
+@Table(name = "users")
 public class User implements UserDetails {
     // define the properties
     @Id
@@ -25,7 +25,7 @@ public class User implements UserDetails {
     private Long id;
 
     @Column(nullable = false )
-    private String UserName;
+    private String userName;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -43,7 +43,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return UserName;
+        return userName;
     }
 
     @Override
