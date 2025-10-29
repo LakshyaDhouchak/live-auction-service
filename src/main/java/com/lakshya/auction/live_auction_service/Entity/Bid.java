@@ -27,8 +27,9 @@ public class Bid {
     @JoinColumn(name = "auction_item_id",nullable = false)
     private AuctionItem auctionItem;
 
-    @Column(nullable = false)
-    private Long bidderUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bidder_user_id", nullable = false)
+    private User bidder;
 
     @Column(nullable = false)
     private  BigDecimal amount;
