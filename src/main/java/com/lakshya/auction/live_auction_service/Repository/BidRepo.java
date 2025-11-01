@@ -15,5 +15,5 @@ public interface BidRepo extends JpaRepository<Bid , Long> {
     Optional<BigDecimal> findHighestAmountByActionItem(@Param("auctionItemId") Long auctionItemId );
 
     Optional<Bid> findTopByAuctionItemIdOrderByAmountDescBidTimeAsc(Long auctionItemId);
-    
+    Long countByAuctionItemId(Long id);
 }
