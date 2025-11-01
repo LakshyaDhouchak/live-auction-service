@@ -3,6 +3,8 @@ package com.lakshya.auction.live_auction_service.DTO;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import com.lakshya.auction.live_auction_service.Entity.AuctionItem.AuctionStatus;
+
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
@@ -19,5 +21,5 @@ public class AuctionItemUpdateDTO {
     @Future(message = "Auction end time must be in the future")
     private Instant endTime;
     
-    private String status;
+    private AuctionStatus status;
 }
