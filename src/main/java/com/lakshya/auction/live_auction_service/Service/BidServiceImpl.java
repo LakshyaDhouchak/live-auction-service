@@ -63,7 +63,7 @@ public class BidServiceImpl implements BidService {
         }
 
         Bid createdBid = new Bid();
-        createdBid.setAmount(highestBid);
+        createdBid.setAmount(dto.getAmount());
         createdBid.setAuctionItem(auctionItem);
         createdBid.setBidder(user);
         createdBid.setBidTime(Instant.now());
