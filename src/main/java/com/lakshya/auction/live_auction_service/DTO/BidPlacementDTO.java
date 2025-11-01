@@ -12,6 +12,9 @@ public class BidPlacementDTO {
     @NotNull(message = "Auction Item ID is required")
     private Long auctionItemId;
 
+    @NotNull(message = "Bidder User ID is required") 
+    private Long bidderUserId;
+
     @NotNull(message = "Bid anount is required")
     @DecimalMin(value = "0.01",inclusive = true ,message = "Bid ammount must be greater than zero")
     private BigDecimal amount;
