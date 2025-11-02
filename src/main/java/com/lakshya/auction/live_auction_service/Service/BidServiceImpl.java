@@ -2,7 +2,9 @@ package com.lakshya.auction.live_auction_service.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,7 @@ import com.lakshya.auction.live_auction_service.ExceptionHandling.ResourceNotFou
 import com.lakshya.auction.live_auction_service.Repository.AuctionRepo;
 import com.lakshya.auction.live_auction_service.Repository.BidRepo;
 import com.lakshya.auction.live_auction_service.Repository.UserRepo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @Service
 public class BidServiceImpl implements BidService {
@@ -27,12 +30,16 @@ public class BidServiceImpl implements BidService {
     private final BidRepo repo;
     private final AuctionRepo auctionRepo;
     private final UserRepo userRepo;
+    private final RedisService redisService;
+    private final SimpMessagingTemplate messageTemplate;
 
     // define the constructor
-    public BidServiceImpl(BidRepo repo , AuctionRepo auctionRepo , UserRepo userRepo){
+    public BidServiceImpl(BidRepo repo , AuctionRepo auctionRepo , UserRepo userRepo,RedisService redisService, SimpMessagingTemplate messagingTemplate){
         this.repo = repo;
         this.auctionRepo = auctionRepo;
         this.userRepo = userRepo;
+        this.redisService = redisService;
+        this.messageTemplate = messagingTemplate;
     }
 
     // define the methord
@@ -74,7 +81,18 @@ public class BidServiceImpl implements BidService {
         auctionItem.setHighBidderUserId(user.getId());
         auctionItem.setCurrentBid(createdBid.getAmount());
         auctionRepo.save(auctionItem);
-        return mapToResponse(savedBid);
+        redisService.setAuction(auctionItem.getId(), createdBid.getAmount());
+
+        // --- INTEGRATION: Publish the new bid to WebSocket Topic ---
+        // Define the topic path, which includes the auction item ID
+        String topic = "/topic/bids/" + auctionItem.getId(); 
+    
+        // Create the DTO to send to clients
+        BidResponseDTO responseDTO = mapToResponse(savedBid);
+
+        // Broadcast the message using the template
+        messageTemplate.convertAndSend(topic, responseDTO);
+        return responseDTO;
 
     }
 
@@ -105,13 +123,30 @@ public class BidServiceImpl implements BidService {
 
         if(iscurrentlyHighestBid){
             Optional<Bid> nextHighest = repo.findTopByAuctionItemIdOrderByAmountDescBidTimeAsc(auctionItem.getId());
+            String topic = "/topic/bids/" + auctionItem.getId();
+            
             if (nextHighest.isPresent()) {
                 Bid newHighest = nextHighest.get();
                 auctionItem.setCurrentBid(newHighest.getAmount());
                 auctionItem.setHighBidderUserId(newHighest.getBidder().getId());
+
+                redisService.setAuction(auctionItem.getId(), newHighest.getAmount());
+                BidResponseDTO responseDTO = mapToResponse(newHighest);
+                messageTemplate.convertAndSend(topic, responseDTO);
+
             } else {
                 auctionItem.setCurrentBid(auctionItem.getStartPrice());
                 auctionItem.setHighBidderUserId(null); 
+
+                // --- REDIS & MESSAGE TEMPLATE: Delete Redis entry and notify clients of reset
+                redisService.deleteBid(auctionItem.getId());
+                
+                // Send a message to signal the bid has reset to the starting price
+                Map<String, Object> resetMessage = new HashMap<>();
+                resetMessage.put("auctionItemId", auctionItem.getId());
+                resetMessage.put("amount", auctionItem.getStartPrice());
+                resetMessage.put("bidderUserId", null);
+                messageTemplate.convertAndSend(topic, resetMessage);
             }
             auctionRepo.save(auctionItem);    
         }
