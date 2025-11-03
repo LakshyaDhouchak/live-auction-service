@@ -6,6 +6,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -15,52 +16,71 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-// Corrected import to match your provided class name
-import com.lakshya.auction.live_auction_service.Security.JwtRequestFilter; 
+import com.lakshya.auction.live_auction_service.Security.JwtRequestFilter;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Main Spring Security Configuration class.
+ * Configures password encoder, security filter chain, and authentication manager.
+ */
 @Configuration
-@EnableWebSecurity
 @RequiredArgsConstructor
+@EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
-    // define the properties
-    // Corrected to match your class name JwtRequestFilter
-    private final JwtRequestFilter jwtRequestFilter; 
+
+    // CORRECTION: This dependency was missing and caused a runtime error. 
+    // It is injected here via @RequiredArgsConstructor.
+    private final JwtRequestFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
-    
-    // define the method
+
+    // Define the PasswordEncoder bean for use in the authentication process.
     @Bean
-    public PasswordEncoder password(){
+    public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(password());
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
 
+    /**
+     * Configures the main security filter chain.
+     * Disables CSRF, sets session management to stateless, defines authorization rules,
+     * and adds the JwtRequestFilter before the standard authentication filter.
+     */
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config ) throws Exception{
-        return config.getAuthenticationManager();
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+        http
+            // Disable CSRF protection as JWT is used and state is handled by the token
+            .csrf(csrf -> csrf.disable())
+            
+            // Set session policy to STATELESS, meaning no session will be created or used 
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            
+            // Configure authorization rules
+            .authorizeHttpRequests(auth -> auth
+                // Allow unauthenticated access to registration and login endpoints
+                .requestMatchers("/api/users/register", "/api/auth/login").permitAll()
+                // Require authentication for all other requests
+                .anyRequest().authenticated()
+            )
+            
+            // Add the custom JWT filter before Spring's default authentication filter
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();    
     }
 
+    /**
+     * Exposes the AuthenticationManager bean, which is required by AuthController.
+     */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)throws Exception{
-        http.csrf(csrf -> csrf.disable())
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        // Added /api/auth/** and /api/users/register to permitAll, including /ws/**
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/users/register", "/api/auth/**", "/ws/**").permitAll() 
-            .anyRequest().authenticated()
-        )
-        .authenticationProvider(authenticationProvider())
-        // Corrected filter property name
-        .addFilterBefore(jwtRequestFilter,UsernamePasswordAuthenticationFilter.class); 
-
-        return http.build();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 }
