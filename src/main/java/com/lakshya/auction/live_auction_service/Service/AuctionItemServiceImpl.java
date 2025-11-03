@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
@@ -17,6 +18,7 @@ import com.lakshya.auction.live_auction_service.ExceptionHandling.ResourceNotFou
 import com.lakshya.auction.live_auction_service.Repository.AuctionRepo;
 import com.lakshya.auction.live_auction_service.Repository.BidRepo;
 
+@Service
 public class AuctionItemServiceImpl implements AuctionItemService{
     // define the properties
     private final AuctionRepo repo;
@@ -38,7 +40,7 @@ public class AuctionItemServiceImpl implements AuctionItemService{
         dto.setHighBidderUserId(auctionItem.getHighBidderUserId());
         dto.setEndTime(auctionItem.getEndTime());
         dto.setStartPrice(auctionItem.getStartPrice());
-        dto.setStatus(dto.getStatus());
+        dto.setStatus(auctionItem.getStatus().name());
         return dto;
     }
 
