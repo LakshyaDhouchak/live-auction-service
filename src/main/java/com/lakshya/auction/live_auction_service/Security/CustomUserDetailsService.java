@@ -3,9 +3,11 @@ package com.lakshya.auction.live_auction_service.Security;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 import com.lakshya.auction.live_auction_service.Repository.UserRepo;
 
+@Service
 public class CustomUserDetailsService implements UserDetailsService {
     // define the properties
     private final UserRepo repo;
