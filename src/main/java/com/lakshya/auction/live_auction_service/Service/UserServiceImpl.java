@@ -16,91 +16,90 @@ import com.lakshya.auction.live_auction_service.ExceptionHandling.ResourceNotFou
 import com.lakshya.auction.live_auction_service.Repository.UserRepo;
 
 @Service
-public class UserServiceImpl implements UserService{
-    // define the properties
-    private final UserRepo repo;
-    private final PasswordEncoder PasswordEncoder;
+public class UserServiceImpl implements UserService {
 
-    // define the constructor
-    public UserServiceImpl(UserRepo repo , PasswordEncoder password ){
-        this.repo = repo;
-        this.PasswordEncoder = password;
+    private final UserRepo userRepo;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserServiceImpl(UserRepo userRepo, PasswordEncoder passwordEncoder) {
+        this.userRepo = userRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    // define the mapToResponse() methord
-    private UserResponseDTO mapToResponse(User user){
-        // calling the UserResponseDTO 
-        UserResponseDTO dto =  new UserResponseDTO();
+    // Helper method to convert entity to DTO
+    private UserResponseDTO mapToResponse(User user) {
+        UserResponseDTO dto = new UserResponseDTO();
         dto.setUserName(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
         return dto;
     }
 
-    // define the methord
-
     @Override
     @Transactional
     public UserResponseDTO createUser(CreateUserDTO dto) {
-        // define the condition
-        if(repo.findByEmail(dto.getEmail()).isPresent()){
-            throw new DataConflictException("Email "+ dto.getEmail() +" is already used");
+        if (userRepo.findByEmail(dto.getEmail()).isPresent()) {
+            throw new DataConflictException("Email " + dto.getEmail() + " is already in use");
         }
-        User createdUser = new User();
-        createdUser.setEmail(dto.getEmail());
-        String HashedPassword = PasswordEncoder.encode(dto.getPassword());
-        createdUser.setPassword(HashedPassword);
-        createdUser.setUserName(dto.getUserName());
-        createdUser.setRole("User");
-        User storedUser = repo.save(createdUser);
-        return mapToResponse(storedUser);
+
+        User newUser = new User();
+        newUser.setEmail(dto.getEmail());
+        newUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+        newUser.setUserName(dto.getUserName());
+        newUser.setRole("USER"); // Use consistent uppercase roles
+
+        User savedUser = userRepo.save(newUser);
+        return mapToResponse(savedUser);
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public UserResponseDTO findById(Long id) {
-        return repo.findById(id).map(this::mapToResponse).orElseThrow(() -> new ResourceNotFoundException("User not Found with id: "+ id));
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        return mapToResponse(user);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<UserResponseDTO> findAllUsers() {
-        return repo.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
+        return userRepo.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
-    
 
     @Override
     @Transactional
     public UserResponseDTO updateUser(Long id, UserUpdateDTO dto) {
-        // define the base condition
-        User existUser =  repo.findById(id).orElseThrow(()-> new ResourceNotFoundException("User not Found with id: "+ id));
-        if(dto.getEmail()!= null && !dto.getEmail().equals(existUser.getEmail())){
+        User existingUser = userRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-            // define the condition
-            if(repo.findByEmail(dto.getEmail()).isPresent()){
-                throw new DataConflictException("Email : "+dto.getEmail()+" is already use in another account");
+        if (dto.getEmail() != null && !dto.getEmail().equals(existingUser.getEmail())) {
+            if (userRepo.findByEmail(dto.getEmail()).isPresent()) {
+                throw new DataConflictException("Email already in use: " + dto.getEmail());
             }
-            if(dto.getUserName()!= null){
-                existUser.setUserName(dto.getUserName());
-            }
-            if(dto.getEmail() != null){
-                existUser.setEmail(dto.getEmail());
-            }
-            if(dto.getRole()!= null){
-                existUser.setRole(dto.getRole());
-            }  
+            existingUser.setEmail(dto.getEmail());
         }
-        User savedUser = repo.save(existUser);
-        return mapToResponse(savedUser);
+
+        if (dto.getUserName() != null) {
+            existingUser.setUserName(dto.getUserName());
+        }
+
+        if (dto.getRole() != null) {
+            existingUser.setRole(dto.getRole());
+        }
+
+        User updatedUser = userRepo.save(existingUser);
+        return mapToResponse(updatedUser);
     }
 
     @Override
-    @Transactional()
+    @Transactional
     public void deleteUser(Long id) {
-        // define the condition
-        if(!repo.findById(id).isPresent()){
-            throw new ResourceNotFoundException("User not found with id: "+ id);
+        if (!userRepo.existsById(id)) {
+            throw new ResourceNotFoundException("User not found with id: " + id);
         }
-        repo.deleteById(id);
+        userRepo.deleteById(id);
     }
 }
