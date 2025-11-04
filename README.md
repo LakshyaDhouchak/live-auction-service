@@ -116,4 +116,19 @@ Example error response:
   "email": "john@example.com",
   "password": "securePassword123"
 }
+```
+
+---
+
+## 🛠 Project Setup & Quick Start
+
+Get the **Live Auction Service** running on your local machine in minutes!
+
+### 🧩 Build and Run
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/LakshyaDhouchak/live-auction-service.git
+   cd live-auction-service
+
 
