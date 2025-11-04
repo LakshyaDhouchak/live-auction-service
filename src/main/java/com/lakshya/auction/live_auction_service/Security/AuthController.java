@@ -21,7 +21,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final CustomUserDetailsService UserDetails;
+    private final CustomUserDetailsService userDetailsService;
 
     /**
      * Handles user login by authenticating credentials and issuing a JWT.
@@ -38,7 +38,7 @@ public class AuthController {
         );
         
         // 2. Load UserDetails after successful authentication to generate the token.
-        final UserDetails userDetails = UserDetails.loadUserByUsername(request.getEmail());
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         
         // 3. Generate JWT
         final String jwt = jwtService.generateToken(userDetails);
