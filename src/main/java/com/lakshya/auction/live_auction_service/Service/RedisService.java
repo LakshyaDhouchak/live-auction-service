@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public class RedisService {
     // define the properties
     private final StringRedisTemplate redisTemplate;
-    private static final String KeyPrefix = "auction:currentBid";
+    private static final String KeyPrefix = "auction:currentBid:";
 
     // define the constructor
     public RedisService(StringRedisTemplate redisTemplate){
