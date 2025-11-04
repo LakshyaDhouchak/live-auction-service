@@ -33,7 +33,7 @@ public class UserController {
 
     // define the methord
     @PostMapping("/register")
-    public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody CreateUserDTO dto){
+    public ResponseEntity<UserResponseDTO> createUser( @RequestBody CreateUserDTO dto){
         UserResponseDTO user = userService.createUser(dto);
         return new ResponseEntity<>(user,HttpStatus.CREATED);
     }
