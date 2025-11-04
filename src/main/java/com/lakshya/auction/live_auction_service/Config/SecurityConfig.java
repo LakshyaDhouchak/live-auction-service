@@ -35,23 +35,26 @@ public class SecurityConfig {
 
     // ✅ Main security filter chain
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http
+            // Disable CSRF protection as JWT is used and state is handled by the token
             .csrf(csrf -> csrf.disable())
+            
+            // Set session policy to STATELESS, meaning no session will be created or used 
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            
+            // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/auth/**",
-                    "/register",
-                    "/login",
-                    "/ws/**"
-                ).permitAll()
+                // Allow unauthenticated access to registration and login endpoints
+                .requestMatchers("/api/users/register", "/api/auth/login").permitAll()
+                .requestMatchers("/ws/**").permitAll()
+                // Require authentication for all other requests
                 .anyRequest().authenticated()
             )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+            
+            // Add the custom JWT filter before Spring's default authentication filter
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
+        return http.build();    
     }
 }
