@@ -47,3 +47,73 @@ Example error response:
   "error": "BAD_REQUEST",
   "timestamp": "2025-11-01T12:00:00Z"
 }
+```
+---
+## 🔗 API Details
+
+| Detail | Value |
+| :--- | :--- |
+| **Base URL** | `http://localhost:8081/api` |
+| **Data Format** | JSON |
+| **Authentication** | Bearer Token (JWT) |
+| **WebSocket Endpoint** | `/live-bids` *(STOMP protocol)* |
+
+---
+
+## 👥 User Management
+
+| Method | Endpoint | Purpose | Security |
+| :--- | :--- | :--- | :--- |
+| **`POST`** | `/api/auth/register` | Register new user | Public |
+| **`POST`** | `/api/auth/login` | Login & receive JWT token | Public |
+| **`GET`** | `/api/users/{id}` | Fetch user details | Auth Required |
+| **`GET`** | `/api/users` | List all users | Admin Only |
+| **`DELETE`** | `/api/users/{id}` | Delete user | Admin Only |
+
+---
+
+## 🎯 Auction Management
+
+| Method | Endpoint | Purpose | Security |
+| :--- | :--- | :--- | :--- |
+| **`POST`** | `/api/auctions` | Create new auction | Admin Only |
+| **`GET`** | `/api/auctions` | List all auctions | Public |
+| **`GET`** | `/api/auctions/{id}` | Get auction details | Public |
+| **`PUT`** | `/api/auctions/{id}` | Update auction details | Admin Only |
+| **`DELETE`** | `/api/auctions/{id}` | Delete auction | Admin Only |
+
+---
+
+## 💸 Bid Management
+
+| Method | Endpoint | Purpose | Security |
+| :--- | :--- | :--- | :--- |
+| **`POST`** | `/api/bids` | Place a new bid *(broadcasted live via WebSocket)* | Auth Required |
+| **`GET`** | `/api/bids/highest/{auctionId}` | Get current highest bid for an auction | Public |
+| **`GET`** | `/api/bids/{auctionId}` | View all bids for a specific auction | Public |
+
+---
+
+## ⚙️ WebSocket Details
+
+| Detail | Description |
+| :--- | :--- |
+| **Endpoint** | `/live-bids` |
+| **Protocol** | STOMP over WebSocket |
+| **Broker Prefix** | `/topic` |
+| **Subscription Example** | `/topic/auction/{auctionId}` |
+| **Message Type** | JSON |
+| **Broadcast Behavior** | Real-time updates when new bid is placed |
+
+---
+
+## 📬 Sample JSON Payloads
+
+### 🧍 User Registration
+```json
+{
+  "username": "john_doe",
+  "email": "john@example.com",
+  "password": "securePassword123"
+}
+
