@@ -14,7 +14,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry ){
         registry.addEndpoint("/live-bids")
-        .setAllowedOrigins("/*")
+        .setAllowedOrigins("*")
         .withSockJS();
     }
 
