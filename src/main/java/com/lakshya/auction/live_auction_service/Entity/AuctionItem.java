@@ -15,7 +15,7 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "auction_item")
+@Table(name = "auction_items")
 public class AuctionItem {
     // define the properties
     @Id
