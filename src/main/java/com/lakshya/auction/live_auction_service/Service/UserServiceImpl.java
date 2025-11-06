@@ -29,6 +29,7 @@ public class UserServiceImpl implements UserService {
     // Helper method to convert entity to DTO
     private UserResponseDTO mapToResponse(User user) {
         UserResponseDTO dto = new UserResponseDTO();
+        dto.setId(user.getId());
         dto.setUserName(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
