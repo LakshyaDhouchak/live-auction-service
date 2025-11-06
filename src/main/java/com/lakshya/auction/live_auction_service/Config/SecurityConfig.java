@@ -21,42 +21,29 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtRequestFilter jwtAuthenticationFilter;
+    private final JwtRequestFilter jwtRequestFilter;
 
-    // ✅ Password encoder bean
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ Authentication manager (auto-configured, no deprecated APIs)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // ✅ Main security filter chain
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF protection as JWT is used and state is handled by the token
             .csrf(csrf -> csrf.disable())
-            
-            // Set session policy to STATELESS, meaning no session will be created or used 
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            
-            // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
-                // Allow unauthenticated access to registration and login endpoints
-                .requestMatchers("/api/users/register", "/api/auth/login").permitAll()
-                .requestMatchers("/ws/**").permitAll()
-                // Require authentication for all other requests
+                .requestMatchers("/api/users/register", "/api/auth/login", "/ws/**").permitAll()
                 .anyRequest().authenticated()
             )
-            
-            // Add the custom JWT filter before Spring's default authentication filter
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();    
+        return http.build();
     }
 }
