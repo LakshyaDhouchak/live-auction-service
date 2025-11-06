@@ -34,7 +34,7 @@ public class AuctionController {
         }
 
         // 2️⃣ Fallback to DB if Redis is empty
-        Optional<BigDecimal> dbBid = bidRepo.findHighestAmountByActionItem(auctionItemId);
+        Optional<BigDecimal> dbBid = bidRepo.findHighestAmountByAuctionItem(auctionItemId);
 
         return ResponseEntity.ok(dbBid.orElse(BigDecimal.ZERO));
     }
