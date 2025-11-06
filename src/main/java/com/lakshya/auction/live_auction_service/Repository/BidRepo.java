@@ -9,11 +9,14 @@ import org.springframework.data.repository.query.Param;
 
 import com.lakshya.auction.live_auction_service.Entity.Bid;
 
-public interface BidRepo extends JpaRepository<Bid , Long> {
-    // define the methord
-    @Query("SELECT MAX(b.amount) FROM Bid b WHERE b.auctionItem.id =: auctionItemId")
-    Optional<BigDecimal> findHighestAmountByActionItem(@Param("auctionItemId") Long auctionItemId );
+public interface BidRepo extends JpaRepository<Bid, Long> {
 
+    // ✅ Get the highest bid amount for a specific auction item
+    @Query("SELECT MAX(b.amount) FROM Bid b WHERE b.auctionItem.id = :auctionItemId")
+    Optional<BigDecimal> findHighestAmountByAuctionItem(@Param("auctionItemId") Long auctionItemId);
+
+    // ✅ Get the top bid (highest amount, earliest bid time) for recalculation
     Optional<Bid> findTopByAuctionItemIdOrderByAmountDescBidTimeAsc(Long auctionItemId);
+
     Long countByAuctionItemId(Long id);
 }
